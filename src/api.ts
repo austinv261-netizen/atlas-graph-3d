@@ -1,35 +1,50 @@
 // src/api.ts
 // Simple client for the Atlas Graph API on Render
 
-// src/api.ts
-const BASE_URL =
-  import.meta.env.VITE_GRAPH_API_BASE_URL ?? "http://localhost:3033";
+const API_BASE = "https://atlas-graph-api.onrender.com";
+
+export type Neighbor = {
+  id: string;
+  label: string | null;
+  relation?: string;
+};
 
 export type NeighborsResponse = {
   nodeId: string;
-  upstream: string[];
-  downstream: string[];
+  label: string | null;
+  upstream: Neighbor[];
+  downstream: Neighbor[];
+};
+
+export type BranchStatsResponse = {
+  nodeId: string;
+  ancestorCount: number;
+  descendantCount: number;
+  totalConnected: number;
 };
 
 export type PathResponse = {
   from: string;
   to: string;
+  found: boolean;
   ids: string[];
   labels: string[];
 };
 
-// example:
-export async function fetchNeighbors(nodeId: string): Promise<NeighborsResponse> {
-  const res = await fetch(`${BASE_URL}/graph/neighbors`, {
+// Generic helper for POSTing JSON
+async function postJSON<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nodeId }),
+    body: JSON.stringify(body),
   });
 
-  if (!res.ok) throw new Error("Failed to fetch neighbors");
-  return res.json();
-}
+  if (!res.ok) {
+    throw new Error(`API ${path} failed: ${res.status} ${res.statusText}`);
+  }
 
+  return (await res.json()) as T;
+}
 
 export function fetchNeighbors(nodeId: string) {
   return postJSON<NeighborsResponse>("/graph/neighbors", { nodeId });
