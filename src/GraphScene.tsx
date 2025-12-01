@@ -1,9 +1,13 @@
 // src/GraphScene.tsx
 
+
 import React, { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import * as THREE from 'three';
 import type { NeighborsResponse } from "./api";
+
+
 
 type GraphSceneProps = {
   data: NeighborsResponse | null;
@@ -104,25 +108,24 @@ const NodeSphere: React.FC<{
   );
 };
 
-const EdgeLine: React.FC<{ from: PositionedNode; to: PositionedNode; highlighted: boolean }> = ({
-  from,
-  to,
-  highlighted,
-}) => {
+const EdgeLine: React.FC<{
+  from: PositionedNode;
+  to: PositionedNode;
+  highlighted: boolean;
+}> = ({ from, to, highlighted }) => {
+  // Build TWO Vector3 points using the THREE import
   const points = useMemo(
     () => [
-      [from.x, from.y, from.z],
-      [to.x, to.y, to.z],
+      new THREE.Vector3(from.x, from.y, from.z),
+      new THREE.Vector3(to.x, to.y, to.z),
     ],
     [from, to]
   );
 
   return (
     <line>
-      <bufferGeometry
-        attach="geometry"
-        setFromPoints={points.map((p) => new (window as any).THREE.Vector3(...p))}
-      />
+      {/* react-three-fiber will call setFromPoints(points) on the underlying geometry */}
+      <bufferGeometry attach="geometry" setFromPoints={points} />
       <lineBasicMaterial
         attach="material"
         color={highlighted ? "#ffd43b" : "#888"}
@@ -131,6 +134,7 @@ const EdgeLine: React.FC<{ from: PositionedNode; to: PositionedNode; highlighted
     </line>
   );
 };
+
 
 export const GraphScene: React.FC<GraphSceneProps> = ({
   data,
